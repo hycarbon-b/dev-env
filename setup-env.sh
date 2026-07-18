@@ -62,7 +62,13 @@ install_uv() {
     return
   fi
 
-  curl --fail --silent --show-error --location https://astral.sh/uv/install.sh | sh
+  local installer
+  installer="$(mktemp)"
+  trap 'rm -f "$installer"' RETURN
+  # The uv project documents this installer for bootstrapping uv on Linux.
+  curl --fail --silent --show-error --location https://astral.sh/uv/install.sh \
+    --output "$installer"
+  sh "$installer"
   export PATH="${HOME}/.local/bin:${PATH}"
 }
 
