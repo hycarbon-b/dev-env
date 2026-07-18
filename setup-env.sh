@@ -68,8 +68,12 @@ install_uv() {
   # The uv project documents this installer for bootstrapping uv on Linux.
   curl --fail --silent --show-error --location https://astral.sh/uv/install.sh \
     --output "$installer"
-  sh "$installer"
+  if ! sh "$installer"; then
+    printf 'error: uv installer failed\n' >&2
+    return 1
+  fi
   export PATH="${HOME}/.local/bin:${PATH}"
+  check_command uv
 }
 
 main() {
