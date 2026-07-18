@@ -47,8 +47,16 @@ install_docker() {
   installer="$(mktemp)"
   trap 'rm -f "$installer"' RETURN
   # Docker recommends this script for installing the latest stable Docker Engine.
-  curl --fail --silent --show-error --location https://get.docker.com \
+  curl --fail --show-error --location https://get.docker.com \
     --output "$installer"
+  grep -q '^#!/bin/sh' "$installer" || {
+    printf 'error: unexpected Docker installer format\n' >&2
+    return 1
+  }
+  grep -q 'Docker CE for Linux installation script' "$installer" || {
+    printf 'error: downloaded script is not the expected Docker installer\n' >&2
+    return 1
+  }
   sudo sh "$installer"
 
   sudo systemctl enable --now docker
