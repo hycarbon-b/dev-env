@@ -53,7 +53,15 @@ install_docker() {
   fi
 
   sudo systemctl enable --now docker
-  sudo usermod -aG docker "${SUDO_USER:-$USER}"
+  local docker_user="${SUDO_USER:-}"
+  if [[ -z "$docker_user" || "$docker_user" == root ]]; then
+    docker_user="$(logname 2>/dev/null || true)"
+  fi
+  if [[ -n "$docker_user" && "$docker_user" != root ]]; then
+    sudo usermod -aG docker "$docker_user"
+  else
+    printf 'Docker is ready for root; run usermod -aG docker USER for a non-root login.\n'
+  fi
   printf 'Docker installed. Log in again if Docker commands require the new group membership.\n'
 }
 
