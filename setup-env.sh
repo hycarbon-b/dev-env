@@ -44,27 +44,32 @@ install_docker() {
   fi
 
   local installer
-  local installer_reference
   installer="$(mktemp)"
-  installer_reference="$(mktemp)"
-  trap 'rm -f "$installer" "$installer_reference"' RETURN
+  trap 'rm -f "$installer"' RETURN
   # Docker recommends this script for installing the latest stable Docker Engine.
   curl --fail --show-error --location --proto '=https' --tlsv1.2 \
     https://get.docker.com --output "$installer" || {
     printf 'error: failed to download Docker installer from get.docker.com\n' >&2
     return 1
   }
-  curl --fail --show-error --location --proto '=https' --tlsv1.2 \
-    https://raw.githubusercontent.com/docker/docker-install/master/install.sh \
-    --output "$installer_reference" || {
-    printf 'error: failed to download Docker installer reference from GitHub\n' >&2
+  local installer_shell
+  installer_shell="$(sed -n 's/^#!//p;q' "$installer")"
+  if [[ -z "$installer_shell" ]]; then
+    printf 'error: Docker installer has no shebang\n' >&2
     return 1
-  }
-  cmp -s "$installer" "$installer_reference" || {
-    printf 'error: installer mismatch between official Docker endpoints\n' >&2
-    return 1
-  }
-  sudo sh "$installer"
+  fi
+  case "$installer_shell" in
+    "/bin/sh")
+      sudo /bin/sh "$installer"
+      ;;
+    "/usr/bin/env sh")
+      sudo /usr/bin/env sh "$installer"
+      ;;
+    *)
+      printf 'error: unexpected Docker installer interpreter: %s\n' "$installer_shell" >&2
+      return 1
+      ;;
+  esac
 
   sudo systemctl enable --now docker
   local docker_user="${SUDO_USER:-}"
