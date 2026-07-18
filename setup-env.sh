@@ -44,17 +44,24 @@ install_docker() {
   fi
 
   local installer
+  local installer_reference
   installer="$(mktemp)"
-  trap 'rm -f "$installer"' RETURN
+  installer_reference="$(mktemp)"
+  trap 'rm -f "$installer" "$installer_reference"' RETURN
   # Docker recommends this script for installing the latest stable Docker Engine.
-  curl --fail --show-error --location https://get.docker.com \
-    --output "$installer"
-  grep -q '^#!/bin/sh' "$installer" || {
-    printf 'error: unexpected Docker installer format\n' >&2
+  curl --fail --show-error --location --proto '=https' --tlsv1.2 \
+    https://get.docker.com --output "$installer" || {
+    printf 'error: failed to download Docker installer from get.docker.com\n' >&2
     return 1
   }
-  grep -q 'Docker CE for Linux installation script' "$installer" || {
-    printf 'error: downloaded script is not the expected Docker installer\n' >&2
+  curl --fail --show-error --location --proto '=https' --tlsv1.2 \
+    https://raw.githubusercontent.com/docker/docker-install/master/install.sh \
+    --output "$installer_reference" || {
+    printf 'error: failed to download Docker installer reference from GitHub\n' >&2
+    return 1
+  }
+  cmp -s "$installer" "$installer_reference" || {
+    printf 'error: installer mismatch between official Docker endpoints\n' >&2
     return 1
   }
   sudo sh "$installer"
