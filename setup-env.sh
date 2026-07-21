@@ -81,7 +81,10 @@ install_uv() {
     printf 'error: failed to download uv installer from astral.sh\n' >&2
     return 1
   }
-  sh "$installer"
+  if ! sh "$installer"; then
+    printf 'error: uv installer failed\n' >&2
+    return 1
+  fi
   export PATH="${HOME}/.local/bin:${PATH}"
   check_command uv
 }
