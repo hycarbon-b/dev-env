@@ -43,33 +43,9 @@ install_docker() {
     return
   fi
 
-  local installer
-  installer="$(mktemp)"
-  trap 'rm -f "$installer"' RETURN
-  # Docker recommends this script for installing the latest stable Docker Engine.
+  # Official Docker installation script for the latest stable release.
   curl --fail --show-error --location --proto '=https' --tlsv1.2 \
-    https://get.docker.com --output "$installer" || {
-    printf 'error: failed to download Docker installer from get.docker.com\n' >&2
-    return 1
-  }
-  local installer_shell
-  installer_shell="$(sed -n 's/^#!//p;q' "$installer")"
-  if [[ -z "$installer_shell" ]]; then
-    printf 'error: Docker installer has no shebang\n' >&2
-    return 1
-  fi
-  case "$installer_shell" in
-    "/bin/sh")
-      sudo /bin/sh "$installer"
-      ;;
-    "/usr/bin/env sh")
-      sudo /usr/bin/env sh "$installer"
-      ;;
-    *)
-      printf 'error: unexpected Docker installer interpreter: %s\n' "$installer_shell" >&2
-      return 1
-      ;;
-  esac
+    https://get.docker.com | sudo sh
 
   sudo systemctl enable --now docker
   local docker_user="${SUDO_USER:-}"
@@ -89,16 +65,8 @@ install_uv() {
     return
   fi
 
-  local installer
-  installer="$(mktemp)"
-  trap 'rm -f "$installer"' RETURN
-  # The uv project documents this installer for bootstrapping uv on Linux.
-  curl --fail --silent --show-error --location https://astral.sh/uv/install.sh \
-    --output "$installer"
-  if ! sh "$installer"; then
-    printf 'error: uv installer failed\n' >&2
-    return 1
-  fi
+  # Official uv installer for Linux/macOS.
+  curl --fail --silent --show-error --location https://astral.sh/uv/install.sh | sh
   export PATH="${HOME}/.local/bin:${PATH}"
   check_command uv
 }
