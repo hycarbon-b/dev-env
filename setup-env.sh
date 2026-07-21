@@ -44,8 +44,12 @@ install_docker() {
   fi
 
   # Official Docker installation script for the latest stable release.
+  local installer
+  installer="$(mktemp)"
+  trap 'rm -f "$installer"' RETURN
   curl --fail --show-error --location --proto '=https' --tlsv1.2 \
-    https://get.docker.com | sudo sh
+    https://get.docker.com --output "$installer"
+  sudo sh "$installer"
 
   sudo systemctl enable --now docker
   local docker_user="${SUDO_USER:-}"
@@ -66,7 +70,12 @@ install_uv() {
   fi
 
   # Official uv installer for Linux/macOS.
-  curl --fail --silent --show-error --location https://astral.sh/uv/install.sh | sh
+  local installer
+  installer="$(mktemp)"
+  trap 'rm -f "$installer"' RETURN
+  curl --fail --silent --show-error --location --proto '=https' --tlsv1.2 \
+    https://astral.sh/uv/install.sh --output "$installer"
+  sh "$installer"
   export PATH="${HOME}/.local/bin:${PATH}"
   check_command uv
 }
