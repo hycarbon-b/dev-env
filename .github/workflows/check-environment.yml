@@ -12,5 +12,5 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Install and check environment with bash
+      - name: Run setup-env install mode (no --check)
         run: bash ./setup-env.sh

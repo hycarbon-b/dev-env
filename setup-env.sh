@@ -58,20 +58,20 @@ install_docker() {
     printf 'error: Docker installer has no shebang\n' >&2
     return 1
   fi
-  local -a docker_installer_cmd
+  local -a installer_cmd
   case "$installer_shell" in
     "/bin/sh")
-      docker_installer_cmd=(/bin/sh)
+      installer_cmd=(/bin/sh)
       ;;
     "/usr/bin/env sh")
-      docker_installer_cmd=(/usr/bin/env sh)
+      installer_cmd=(/usr/bin/env sh)
       ;;
     *)
       printf 'error: unexpected Docker installer interpreter: %s\n' "$installer_shell" >&2
       return 1
       ;;
   esac
-  if ! sudo "${docker_installer_cmd[@]}" "$installer"; then
+  if ! sudo "${installer_cmd[@]}" "$installer"; then
     printf 'error: Docker installer failed\n' >&2
     return 1
   fi
@@ -109,20 +109,20 @@ install_uv() {
     printf 'error: uv installer has no shebang\n' >&2
     return 1
   fi
-  local -a uv_installer_cmd
+  local -a installer_cmd
   case "$installer_shell" in
     "/bin/sh")
-      uv_installer_cmd=(/bin/sh)
+      installer_cmd=(/bin/sh)
       ;;
     "/usr/bin/env sh")
-      uv_installer_cmd=(/usr/bin/env sh)
+      installer_cmd=(/usr/bin/env sh)
       ;;
     *)
       printf 'error: unexpected uv installer interpreter: %s\n' "$installer_shell" >&2
       return 1
       ;;
   esac
-  if ! "${uv_installer_cmd[@]}" "$installer"; then
+  if ! "${installer_cmd[@]}" "$installer"; then
     printf 'error: uv installer failed\n' >&2
     return 1
   fi
