@@ -48,7 +48,10 @@ install_docker() {
   installer="$(mktemp)"
   trap 'rm -f "$installer"' RETURN
   curl --fail --show-error --location --proto '=https' --tlsv1.2 \
-    https://get.docker.com --output "$installer"
+    https://get.docker.com --output "$installer" || {
+    printf 'error: failed to download Docker installer from get.docker.com\n' >&2
+    return 1
+  }
   sudo sh "$installer"
 
   sudo systemctl enable --now docker
@@ -74,7 +77,10 @@ install_uv() {
   installer="$(mktemp)"
   trap 'rm -f "$installer"' RETURN
   curl --fail --silent --show-error --location --proto '=https' --tlsv1.2 \
-    https://astral.sh/uv/install.sh --output "$installer"
+    https://astral.sh/uv/install.sh --output "$installer" || {
+    printf 'error: failed to download uv installer from astral.sh\n' >&2
+    return 1
+  }
   sh "$installer"
   export PATH="${HOME}/.local/bin:${PATH}"
   check_command uv
