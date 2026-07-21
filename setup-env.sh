@@ -43,14 +43,33 @@ install_docker() {
     return
   fi
 
-  if command -v dnf >/dev/null 2>&1; then
-    sudo dnf install -y docker
-  elif command -v amazon-linux-extras >/dev/null 2>&1; then
-    sudo amazon-linux-extras install -y docker
-  else
-    printf 'error: this installer supports Amazon Linux with dnf or amazon-linux-extras\n' >&2
+  local installer
+  installer="$(mktemp)"
+  trap 'rm -f "$installer"' RETURN
+  # Docker recommends this script for installing the latest stable Docker Engine.
+  curl --fail --show-error --location --proto '=https' --tlsv1.2 \
+    https://get.docker.com --output "$installer" || {
+    printf 'error: failed to download Docker installer from get.docker.com\n' >&2
+    return 1
+  }
+  local installer_shell
+  installer_shell="$(sed -n 's/^#!//p;q' "$installer")"
+  if [[ -z "$installer_shell" ]]; then
+    printf 'error: Docker installer has no shebang\n' >&2
     return 1
   fi
+  case "$installer_shell" in
+    "/bin/sh")
+      sudo /bin/sh "$installer"
+      ;;
+    "/usr/bin/env sh")
+      sudo /usr/bin/env sh "$installer"
+      ;;
+    *)
+      printf 'error: unexpected Docker installer interpreter: %s\n' "$installer_shell" >&2
+      return 1
+      ;;
+  esac
 
   sudo systemctl enable --now docker
   local docker_user="${SUDO_USER:-}"
