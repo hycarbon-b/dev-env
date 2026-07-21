@@ -54,6 +54,10 @@ install_docker() {
     return 1
   }
   installer_shell="$(sed -n 's/^#!//p;q' "$installer")"
+  if [[ -z "$installer_shell" ]]; then
+    printf 'error: Docker installer has no shebang\n' >&2
+    return 1
+  fi
   case "$installer_shell" in
     "/bin/sh"|"/usr/bin/env sh")
       ;;
@@ -96,6 +100,10 @@ install_uv() {
     return 1
   }
   installer_shell="$(sed -n 's/^#!//p;q' "$installer")"
+  if [[ -z "$installer_shell" ]]; then
+    printf 'error: uv installer has no shebang\n' >&2
+    return 1
+  fi
   case "$installer_shell" in
     "/bin/sh"|"/usr/bin/env sh")
       ;;
