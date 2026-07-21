@@ -45,6 +45,7 @@ install_docker() {
 
   # Official Docker installation script for the latest stable release.
   local installer
+  local installer_shell
   installer="$(mktemp)"
   trap 'rm -f "$installer"' RETURN
   curl --fail --show-error --location --proto '=https' --tlsv1.2 \
@@ -52,7 +53,19 @@ install_docker() {
     printf 'error: failed to download Docker installer from get.docker.com\n' >&2
     return 1
   }
-  sudo sh "$installer"
+  installer_shell="$(sed -n 's/^#!//p;q' "$installer")"
+  case "$installer_shell" in
+    "/bin/sh"|"/usr/bin/env sh")
+      ;;
+    *)
+      printf 'error: unexpected Docker installer interpreter: %s\n' "$installer_shell" >&2
+      return 1
+      ;;
+  esac
+  if ! sudo sh "$installer"; then
+    printf 'error: Docker installer failed\n' >&2
+    return 1
+  fi
 
   sudo systemctl enable --now docker
   local docker_user="${SUDO_USER:-}"
@@ -74,6 +87,7 @@ install_uv() {
 
   # Official uv installer for Linux/macOS.
   local installer
+  local installer_shell
   installer="$(mktemp)"
   trap 'rm -f "$installer"' RETURN
   curl --fail --silent --show-error --location --proto '=https' --tlsv1.2 \
@@ -81,6 +95,15 @@ install_uv() {
     printf 'error: failed to download uv installer from astral.sh\n' >&2
     return 1
   }
+  installer_shell="$(sed -n 's/^#!//p;q' "$installer")"
+  case "$installer_shell" in
+    "/bin/sh"|"/usr/bin/env sh")
+      ;;
+    *)
+      printf 'error: unexpected uv installer interpreter: %s\n' "$installer_shell" >&2
+      return 1
+      ;;
+  esac
   if ! sh "$installer"; then
     printf 'error: uv installer failed\n' >&2
     return 1
