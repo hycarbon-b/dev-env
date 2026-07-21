@@ -12,7 +12,5 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Install uv for the tutorial check
-        uses: astral-sh/setup-uv@v6
-      - name: Check Docker and compose environment
-        run: bash ./setup-env.sh --check
+      - name: Install and check environment with bash
+        run: bash ./setup-env.sh
